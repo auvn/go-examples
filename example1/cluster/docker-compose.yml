@@ -1,0 +1,22 @@
+version: "3"
+services:
+  postgres:
+    image: auvn/go-examples/example1/postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: userpwd
+  zookeeper:
+    image: wurstmeister/zookeeper
+  kafka:
+    image: wurstmeister/kafka
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+  wview:
+    image: auvn/go-examples/example1/cluster/services/wview
+    ports:
+      - "8080:8000"
+  sgw:
+    image: auvn/go-examples/example1/cluster/services/sgw
+  strips:
+    image: auvn/go-examples/example1/cluster/services/strips

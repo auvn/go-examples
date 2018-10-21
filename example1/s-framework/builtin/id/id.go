@@ -10,19 +10,20 @@ import (
 type ID string
 
 func (id *ID) UnmarshalJSON(bb []byte) error {
-	if len(bb) == 0 {
-		return errors.Errorf("empty id")
+	if string(bb) == `""` {
+		return errors.Errorf("id is empty")
 	}
 	var uuidVal uuid.UUID
 	if err := json.Unmarshal(bb, &uuidVal); err != nil {
 		return err
 	}
-	*id = ID(string(uuidVal))
+	*id = ID(uuidVal.String())
 	return nil
 }
 
 func (id ID) MarshalJSON() ([]byte, error) {
-	return json.Marshal(id)
+	uuidValue := uuid.Parse(string(id))
+	return json.Marshal(uuidValue)
 }
 
 func New() ID {

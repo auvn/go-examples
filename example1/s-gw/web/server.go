@@ -1,7 +1,9 @@
 package web
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -60,8 +62,6 @@ const (
 
 func newHandler(cfg EndpointConfig, client transport.Requester) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-
 		messageID := id.New()
 		rw.Header().Set(headerMessageID, string(messageID))
 
@@ -83,16 +83,37 @@ func newHandler(cfg EndpointConfig, client transport.Requester) http.HandlerFunc
 
 		defer reply.Body.Close()
 
-		if reply.Error != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			if _, err := rw.Write(reply.Error); err != nil {
-				log.Printf("cannot write error: %v\n", err)
-			}
-			return
-		}
-
-		if _, err := io.Copy(rw, reply.Body); err != nil {
-			log.Printf("cannot copy reply body to response: %v\n", err)
+		if err := handleReply(*reply, rw); err != nil {
+			log.Printf("failed to handle reply: %v", err)
 		}
 	}
+}
+
+type response struct {
+	Body  *json.RawMessage `json:",omitempty"`
+	Error string           `json:",omitempty"`
+}
+
+func handleReply(reply transport.Reply, rw http.ResponseWriter) error {
+	rw.Header().Set("Content-Type", "application/json")
+
+	if !reply.Successful {
+		rw.WriteHeader(http.StatusBadRequest)
+	}
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, reply.Body); err != nil {
+		return err
+	}
+
+	resp := response{
+		Error: reply.Error,
+	}
+	if buf.Len() != 0 {
+		body := json.RawMessage(buf.Bytes())
+		resp.Body = &body
+	}
+
+	enc := json.NewEncoder(rw)
+	return enc.Encode(resp)
 }

@@ -14,7 +14,7 @@ func main() {
 	db := sqldb.NewPostgres("strips")
 
 	handlers := handler.Handlers{
-		Rides: trip.NewTrips(db),
+		Trips: trip.NewTrips(db),
 	}
 
 	httpTransport := hottabych.

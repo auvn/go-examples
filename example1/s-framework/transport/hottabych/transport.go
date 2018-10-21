@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/auvn/go-examples/example1/s-framework/httputil"
 	"github.com/auvn/go-examples/example1/s-framework/transport"
 )
 
 const (
 	headerMessageID   = "X-Message-ID"
 	headerMessageType = "X-Message-Type"
+	headerReplyError  = "X-Reply-Error"
 )
 
 type Client struct {
@@ -21,10 +21,6 @@ type Client struct {
 }
 
 func (c Client) Request(ctx context.Context, msg transport.Message) (*transport.Reply, error) {
-	if msg.Recipient == "" {
-		return nil, transport.ErrUnknownRecipient
-	}
-
 	if c.Port == 0 {
 		c.Port = 1200
 	}
@@ -43,17 +39,11 @@ func (c Client) Request(ctx context.Context, msg transport.Message) (*transport.
 	if err != nil {
 		return nil, err
 	}
-
-	var errCode []byte
-	if resp.StatusCode != http.StatusOK {
-		errCode = []byte(resp.Status)
-	}
-
 	return &transport.Reply{
-		Body:  resp.Body,
-		Error: errCode,
+		Body:       resp.Body,
+		Error:      resp.Header.Get(headerReplyError),
+		Successful: resp.StatusCode == http.StatusOK,
 	}, nil
-
 }
 
 func NewClient() Client {
@@ -62,54 +52,4 @@ func NewClient() Client {
 			Timeout: 2 * time.Second,
 		},
 	}
-}
-
-type Server struct {
-	addr     string
-	handlers transport.HandlerMap
-}
-
-func (s Server) handler(rw http.ResponseWriter, req *http.Request) {
-	defer req.Body.Close()
-	//messageID := req.Header.Get(headerMessageID)
-	messageType := req.Header.Get(headerMessageType)
-
-	h, ok := s.handlers[messageType]
-	if !ok {
-		rw.WriteHeader(http.StatusBadRequest)
-		rw.Write([]byte("unknown handler"))
-		return
-	}
-
-	if err := h(req.Context(), req.Body, rw); err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Write([]byte(err.Error()))
-		return
-	}
-}
-
-func (s Server) Serve(ctx context.Context) error {
-	return httputil.Serve(ctx,
-		http.HandlerFunc(s.handler),
-		httputil.ServeConfig{Addr: s.addr, ShutdownTimeout: time.Minute})
-}
-
-func (s *Server) Handle(msgType string, h transport.HandlerFunc) *Server {
-	s.handlers.Register(msgType, h)
-	return s
-}
-
-func NewServer(addr string) *Server {
-	return &Server{
-		addr:     addr,
-		handlers: transport.HandlerMap{},
-	}
-}
-
-var (
-	DefaultServer = NewServer(":1200")
-)
-
-func Handle(msgType string, h transport.HandlerFunc) *Server {
-	return DefaultServer.Handle(msgType, h)
 }

@@ -22,8 +22,9 @@ type Event struct {
 }
 
 type Reply struct {
-	Body  io.ReadCloser
-	Error []byte
+	Body       io.ReadCloser
+	Error      string
+	Successful bool
 }
 
 type ResponseWriter interface {

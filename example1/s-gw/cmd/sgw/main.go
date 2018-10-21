@@ -10,9 +10,9 @@ import (
 func main() {
 	server := web.NewServer(":8080",
 		web.EndpointConfig{
-			Path:          "/trips/request",
+			Path:          "/trips/reserve",
 			TargetService: "strips",
-			MessageType:   "Request",
+			MessageType:   "Reserve",
 			Method:        "POST",
 		},
 		web.EndpointConfig{

@@ -2,9 +2,15 @@ package trip
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/auvn/go-examples/example1/s-framework/builtin/id"
 	"github.com/auvn/go-examples/example1/s-framework/database/sqldb"
+)
+
+var (
+	ErrActiveExists = errors.New("active exists")
 )
 
 type Trip struct {
@@ -18,11 +24,21 @@ type Trips struct {
 	*sqldb.DB
 }
 
-func (rr Trips) Create(ctx context.Context, r Trip) error {
+func (tt Trips) ActiveByRider(ctx context.Context, rider id.ID) (*Trip, error) {
 	const query = `
-		insert into trips (id, driver, rider, status) 
-		values (:id, :driver, :rider, :status)`
+		select id, driver, rider 
+		from trips where active and rider = :rider`
 
+	return nil, nil
+}
+
+func (rr Trips) Create(ctx context.Context, r Trip) error {
+	const (
+		query = `
+			insert into trips (id, rider, status) 
+			values (:id, :rider, :status)`
+	)
+	fmt.Printf("%+v\n", r)
 	if _, err := rr.NamedExecContext(ctx, query, r); err != nil {
 		return err
 	}

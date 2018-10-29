@@ -3,22 +3,20 @@ package main
 import (
 	"context"
 
-	"github.com/auvn/go-examples/example1/s-framework/service"
+	"github.com/auvn/go-examples/example1/s-framework/servegroup"
+	"github.com/auvn/go-examples/example1/s-framework/transport/natsss"
+	"github.com/auvn/go-examples/example1/s-gw/gwevent"
+	"github.com/auvn/go-examples/example1/s-gw/stream"
 	"github.com/auvn/go-examples/example1/s-gw/web"
 )
 
 func main() {
+	streams := stream.NewStreams(":8081")
 	server := web.NewServer(":8080",
 		web.EndpointConfig{
 			Path:          "/trips/reserve",
 			TargetService: "strips",
 			MessageType:   "Reserve",
-			Method:        "POST",
-		},
-		web.EndpointConfig{
-			Path:          "/trips/update",
-			TargetService: "strips",
-			MessageType:   "Update",
 			Method:        "POST",
 		},
 
@@ -34,28 +32,23 @@ func main() {
 			TargetService: "stracking",
 			MessageType:   "Track",
 			Method:        "POST",
+			Port:          1202,
 		},
 
 		web.EndpointConfig{
-			Path:          "/driver/login",
+			Path:          "/driver/auth",
 			TargetService: "susers",
 			MessageType:   "AuthenticateDriver",
 			Method:        "POST",
-		},
-		web.EndpointConfig{
-			Path:          "/rider/login",
-			TargetService: "susers",
-			MessageType:   "AuthenticateRider",
-			Method:        "POST",
-		},
-
-		web.EndpointConfig{
-			Path:          "/service/health",
-			TargetService: "shealth",
-			MessageType:   "Get",
-			Method:        "GET",
+			Port:          1201,
 		},
 	)
 
-	service.Serve(context.Background(), server)
+	natsssServer := natsss.NewServer(natsss.ServerConfig{ClusterName: "test-cluster", Name: "sgw"})
+	natsssServer.Subscribe(gwevent.TypeUserEvent, streams.SendUserEvent)
+
+	servegroup.Serve(context.Background(),
+		server,
+		streams,
+		natsssServer)
 }

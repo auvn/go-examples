@@ -3,69 +3,107 @@ package trip
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/auvn/go-examples/example1/s-framework/builtin/id"
-	"github.com/auvn/go-examples/example1/s-framework/database/sqldb"
+	"github.com/auvn/go-examples/example1/s-framework/storage"
+	"github.com/auvn/go-examples/example1/s-framework/storage/redis"
 )
 
 var (
-	ErrActiveExists = errors.New("active exists")
+	ErrNotFound      = errors.New("not found")
+	ErrRiderNotFound = errors.New("rider not found")
+	ErrActiveExists  = errors.New("active exists")
 )
 
 type Trip struct {
+	ID        id.ID
+	DriverID  *id.ID
+	RiderID   id.ID
+	Completed bool
+}
+
+type Driver struct {
 	ID     id.ID
-	Driver id.ID
-	Rider  id.ID
-	Status string
+	TripID id.ID
+}
+
+type Rider struct {
+	ID     id.ID
+	TripID id.ID
 }
 
 type Trips struct {
-	*sqldb.DB
+	riders  storage.Simple
+	trips   storage.Simple
+	drivers storage.Simple
 }
 
-func (tt Trips) ActiveByRider(ctx context.Context, rider id.ID) (*Trip, error) {
-	const query = `
-		select id, driver, rider 
-		from trips where active and rider = :rider`
-
-	return nil, nil
-}
-
-func (rr Trips) Create(ctx context.Context, r Trip) error {
-	const (
-		query = `
-			insert into trips (id, rider, status) 
-			values (:id, :rider, :status)`
-	)
-	fmt.Printf("%+v\n", r)
-	if _, err := rr.NamedExecContext(ctx, query, r); err != nil {
+func (tt *Trips) Create(ctx context.Context, t Trip) error {
+	if err := tt.trips.Set(ctx, t.ID, t); err != nil {
 		return err
 	}
+
+	if err := tt.riders.Set(ctx, t.RiderID, Rider{ID: t.RiderID, TripID: t.ID}); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (rr Trips) Update(ctx context.Context, r Trip) error {
-	const (
-		selectQuery = `select status from trips id = :id for update`
-		updateQuery = `update trips set status=:status where id = :id`
-	)
-
-	return rr.Transaction(ctx, func(ctx context.Context, tx *sqldb.Tx) error {
-		var (
-			status string
-		)
-		if err := tx.NamedGet(ctx, &status, selectQuery, r); err != nil {
-			return err
-		}
-
-		if _, err := tx.NamedExecContext(ctx, updateQuery, r); err != nil {
-			return err
-		}
-		return nil
-	})
+func (tt *Trips) ByID(ctx context.Context, id id.ID) (*Trip, error) {
+	var trip Trip
+	if err := tt.trips.Get(ctx, id, &trip); err != nil {
+		return nil, err
+	}
+	return &trip, nil
 }
 
-func NewTrips(db *sqldb.DB) *Trips {
-	return &Trips{db}
+func (tt *Trips) ByRider(ctx context.Context, riderID id.ID) (*Trip, error) {
+	var rider Rider
+	if err := tt.riders.Get(ctx, riderID, &rider); err != nil {
+		return nil, err
+	}
+
+	var trip Trip
+	if err := tt.trips.Get(ctx, rider.TripID, &trip); err != nil {
+		return nil, err
+	}
+
+	return &trip, nil
+}
+func (tt *Trips) ByDriver(ctx context.Context, driverID id.ID) (*Trip, error) {
+	var driver Driver
+	if err := tt.drivers.Get(ctx, driverID, &driver); err != nil {
+		return nil, err
+	}
+
+	var trip Trip
+	if err := tt.trips.Get(ctx, driver.TripID, &trip); err != nil {
+		return nil, err
+	}
+
+	return &trip, nil
+}
+
+func (tt Trips) AssignDriver(ctx context.Context, d Driver) error {
+	trip, err := tt.ByID(ctx, d.TripID)
+	if err != nil {
+		return err
+	}
+
+	trip.DriverID = &d.ID
+
+	if err := tt.trips.Set(ctx, trip.ID, trip); err != nil {
+		return err
+	}
+
+	return tt.drivers.Set(ctx, d.ID, d)
+}
+
+func NewTrips(r redis.Client) *Trips {
+	return &Trips{
+		riders:  redis.NewSimpleStorage("riders", r),
+		trips:   redis.NewSimpleStorage("trips", r),
+		drivers: redis.NewSimpleStorage("drivers", r),
+	}
 }

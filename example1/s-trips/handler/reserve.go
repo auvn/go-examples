@@ -6,17 +6,14 @@ import (
 
 	"github.com/auvn/go-examples/example1/s-framework/builtin/id"
 	"github.com/auvn/go-examples/example1/s-framework/encoding"
+	"github.com/auvn/go-examples/example1/s-gw/gwevent"
+	"github.com/auvn/go-examples/example1/s-trips/ridersevent"
 	"github.com/auvn/go-examples/example1/s-trips/trip"
 	"github.com/auvn/go-examples/example1/s-trips/tripsevent"
-	"github.com/pkg/errors"
 )
 
 type ReserveRequest struct {
 	RiderID id.ID
-}
-
-type ReserveResponse struct {
-	TripID id.ID
 }
 
 func (h *Handlers) Reserve(ctx context.Context, body io.Reader, w io.Writer) error {
@@ -24,30 +21,30 @@ func (h *Handlers) Reserve(ctx context.Context, body io.Reader, w io.Writer) err
 	if err := encoding.UnmarshalReader(body, &req); err != nil {
 		return err
 	}
+
 	newTrip := trip.Trip{
-		ID:    id.New(),
-		Rider: req.RiderID,
+		ID:      id.New(),
+		RiderID: req.RiderID,
 	}
 
 	if err := h.Trips.Create(ctx, newTrip); err != nil {
-		switch errors.Cause(err) {
-		case trip.ErrActiveExists:
-			return err
-		default:
-			return err
-		}
+		return err
 	}
 
-	err := h.Events.PublishReserved(ctx, tripsevent.Reserved{
+	err := h.Events.PublishEvent(ctx, tripsevent.TypeReserved, tripsevent.Reserved{
 		TripID:  newTrip.ID,
-		RiderID: newTrip.Rider,
+		RiderID: newTrip.RiderID,
 	})
 	if err != nil {
 		return err
 	}
 
-	resp := ReserveResponse{
-		TripID: newTrip.ID,
-	}
-	return encoding.MarshalToWriter(resp, w)
+	return gwevent.PublishUserEvent(ctx, h.Events,
+		gwevent.UserEvent{
+			Type:   ridersevent.TypeTripReserved,
+			UserID: req.RiderID,
+			Body: ridersevent.TripReserved{
+				TripID: newTrip.ID,
+			}},
+	)
 }

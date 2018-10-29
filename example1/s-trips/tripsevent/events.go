@@ -1,11 +1,14 @@
 package tripsevent
 
-import "github.com/auvn/go-examples/example1/s-framework/builtin/id"
+import (
+	"time"
+
+	"github.com/auvn/go-examples/example1/s-framework/builtin/id"
+)
 
 const (
-	TypeReserved    = "trips/reserved"
-	TypeDriverFound = "trips/driver_found"
-	TypeCanceled    = "trips/canceled"
+	TypeReserved  = "trips_reserved"
+	TypeCompleted = "trips_completed"
 )
 
 type Reserved struct {
@@ -13,11 +16,11 @@ type Reserved struct {
 	RiderID id.ID
 }
 
-type DriverFound struct {
+type Completed struct {
 	TripID   id.ID
 	DriverID id.ID
-}
+	RiderID  id.ID
 
-type Canceled struct {
-	TripID id.ID
+	Distance int
+	Duration time.Duration
 }

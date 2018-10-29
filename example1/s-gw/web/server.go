@@ -22,6 +22,8 @@ type EndpointConfig struct {
 
 	TargetService string
 	MessageType   string
+
+	Port int
 }
 
 type Server struct {
@@ -42,7 +44,9 @@ func NewServer(addr string, endpoints ...EndpointConfig) *Server {
 	for _, e := range endpoints {
 		client, ok := clients[e.TargetService]
 		if !ok {
-			client = hottabych.NewClient()
+			httpClient := hottabych.NewClient()
+			httpClient.Port = e.Port
+			client = httpClient
 			clients[e.TargetService] = client
 		}
 		r.

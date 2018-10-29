@@ -9,12 +9,6 @@ import (
 	"github.com/auvn/go-examples/example1/s-framework/transport"
 )
 
-const (
-	headerMessageID   = "X-Message-ID"
-	headerMessageType = "X-Message-Type"
-	headerReplyError  = "X-Reply-Error"
-)
-
 type Client struct {
 	Port       int
 	httpClient http.Client
@@ -32,6 +26,7 @@ func (c Client) Request(ctx context.Context, msg transport.Message) (*transport.
 
 	req.Header.Set(headerMessageID, string(msg.ID))
 	req.Header.Set(headerMessageType, msg.Type)
+	//req.Header.Set(headerMessageDeadline, msg.Deadline.String())
 
 	req = req.WithContext(ctx)
 

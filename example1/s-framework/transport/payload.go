@@ -13,6 +13,7 @@ type Message struct {
 	Recipient string
 	Type      string
 	Body      io.Reader
+	//Deadline  time.Time
 }
 
 type Event struct {
@@ -27,20 +28,8 @@ type Reply struct {
 	Successful bool
 }
 
-type ResponseWriter interface {
-	io.Writer
-}
-
-type RequestReader interface {
-	io.Reader
-}
-
 type Requester interface {
 	Request(ctx context.Context, msg Message) (*Reply, error)
-}
-
-type Enqueuer interface {
-	Enqueue(ctx context.Context, msg Message) error
 }
 
 type Publisher interface {

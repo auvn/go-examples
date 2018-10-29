@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/auvn/go-examples/example1/s-framework/apierror"
-	"github.com/auvn/go-examples/example1/s-framework/builtin/id"
-	"github.com/auvn/go-examples/example1/s-framework/contextutil"
 	"github.com/auvn/go-examples/example1/s-framework/httputil"
 	"github.com/auvn/go-examples/example1/s-framework/transport"
 )
@@ -22,8 +20,7 @@ type Server struct {
 
 func (s Server) handler(rw http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
-	messageID := req.Header.Get(headerMessageID)
-	ctx := contextutil.WithActivityID(req.Context(), id.ID(messageID))
+	ctx := req.Context()
 
 	messageType := req.Header.Get(headerMessageType)
 	h, ok := s.handlers[messageType]
@@ -36,6 +33,7 @@ func (s Server) handler(rw http.ResponseWriter, req *http.Request) {
 	var handlerResp bytes.Buffer
 	if err := h(ctx, req.Body, &handlerResp); err != nil {
 		handleError(err, rw)
+		log.Printf("hottabych: %q: handle error: %v", messageType, err)
 	}
 
 	if _, err := io.Copy(rw, &handlerResp); err != nil {
@@ -55,15 +53,14 @@ func (s *Server) Handle(msgType string, h transport.HandlerFunc) *Server {
 }
 
 func NewServer(addr string) *Server {
+	if addr == "" {
+		addr = options.Addr
+	}
 	return &Server{
 		addr:     addr,
 		handlers: transport.HandlerMap{},
 	}
 }
-
-var (
-	DefaultServer = NewServer(":1200")
-)
 
 func Handle(msgType string, h transport.HandlerFunc) *Server {
 	return DefaultServer.Handle(msgType, h)

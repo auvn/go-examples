@@ -5,14 +5,13 @@ import (
 	"io"
 	"time"
 
-	"github.com/auvn/go-examples/example1/s-framework/builtin/id"
-	"github.com/auvn/go-examples/example1/s-framework/encoding"
-	"github.com/auvn/go-examples/example1/s-trips/tripsevent"
+	"github.com/auvn/go-examples/example1/frwk-core/builtin/id"
+	"github.com/auvn/go-examples/example1/frwk-core/encoding"
+	"github.com/auvn/go-examples/example1/s-trips/event/tripsevent"
 )
 
 func (h *Handlers) Complete(ctx context.Context, body io.Reader, _ io.Writer) error {
 	var req struct {
-		TripID   id.ID
 		DriverID id.ID
 	}
 
@@ -20,11 +19,18 @@ func (h *Handlers) Complete(ctx context.Context, body io.Reader, _ io.Writer) er
 		return err
 	}
 
-	return h.Events.PublishEvent(ctx, tripsevent.TypeCompleted, tripsevent.Completed{
-		DriverID: req.DriverID,
-		TripID:   req.TripID,
-		RiderID:  id.New(),
-		Distance: 100,
-		Duration: time.Hour,
-	})
+	completedTrip, err := h.Trips.Complete(ctx, req.DriverID)
+	if err != nil {
+		return err
+	}
+
+	return h.Events.PublishEvent(ctx,
+		tripsevent.TypeCompleted,
+		tripsevent.Completed{
+			DriverID: req.DriverID,
+			TripID:   completedTrip.ID,
+			RiderID:  completedTrip.RiderID,
+			Distance: 100,
+			Duration: time.Hour,
+		})
 }

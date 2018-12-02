@@ -9,10 +9,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/auvn/go-examples/example1/s-framework/builtin/id"
-	"github.com/auvn/go-examples/example1/s-framework/httputil"
-	"github.com/auvn/go-examples/example1/s-framework/transport"
-	"github.com/auvn/go-examples/example1/s-framework/transport/hottabych"
+	"github.com/auvn/go-examples/example1/frwk-core/builtin/id"
+	"github.com/auvn/go-examples/example1/frwk-core/httputil"
+	"github.com/auvn/go-examples/example1/frwk-core/transport"
+	"github.com/auvn/go-examples/example1/frwk-core/transport/message"
+	"github.com/auvn/go-examples/example1/frwk-transport/hottabych"
 	"github.com/gorilla/mux"
 )
 
@@ -38,7 +39,7 @@ func (s *Server) Serve(ctx context.Context) error {
 }
 
 func NewServer(addr string, endpoints ...EndpointConfig) *Server {
-	clients := map[string]transport.Requester{}
+	clients := map[string]message.Requester{}
 
 	r := mux.NewRouter()
 	for _, e := range endpoints {
@@ -64,7 +65,7 @@ const (
 	headerMessageID = "X-Message-ID"
 )
 
-func newHandler(cfg EndpointConfig, client transport.Requester) http.HandlerFunc {
+func newHandler(cfg EndpointConfig, client message.Requester) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		messageID := id.New()
 		rw.Header().Set(headerMessageID, string(messageID))

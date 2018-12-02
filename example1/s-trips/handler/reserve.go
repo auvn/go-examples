@@ -4,12 +4,12 @@ import (
 	"context"
 	"io"
 
-	"github.com/auvn/go-examples/example1/s-framework/builtin/id"
-	"github.com/auvn/go-examples/example1/s-framework/encoding"
+	"github.com/auvn/go-examples/example1/frwk-core/builtin/id"
+	"github.com/auvn/go-examples/example1/frwk-core/encoding"
 	"github.com/auvn/go-examples/example1/s-gw/gwevent"
-	"github.com/auvn/go-examples/example1/s-trips/ridersevent"
+	"github.com/auvn/go-examples/example1/s-trips/event/ridersevent"
+	"github.com/auvn/go-examples/example1/s-trips/event/tripsevent"
 	"github.com/auvn/go-examples/example1/s-trips/trip"
-	"github.com/auvn/go-examples/example1/s-trips/tripsevent"
 )
 
 type ReserveRequest struct {
@@ -31,10 +31,12 @@ func (h *Handlers) Reserve(ctx context.Context, body io.Reader, w io.Writer) err
 		return err
 	}
 
-	err := h.Events.PublishEvent(ctx, tripsevent.TypeReserved, tripsevent.Reserved{
-		TripID:  newTrip.ID,
-		RiderID: newTrip.RiderID,
-	})
+	err := h.Events.PublishEvent(ctx,
+		tripsevent.TypeReserved,
+		tripsevent.Reserved{
+			TripID:  newTrip.ID,
+			RiderID: newTrip.RiderID,
+		})
 	if err != nil {
 		return err
 	}

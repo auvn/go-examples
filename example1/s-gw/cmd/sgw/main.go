@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
-	"github.com/auvn/go-examples/example1/s-framework/servegroup"
-	"github.com/auvn/go-examples/example1/s-framework/transport/natsss"
+	"github.com/auvn/go-examples/example1/frwk-core/servegroup"
+	"github.com/auvn/go-examples/example1/frwk-transport/natsss"
 	"github.com/auvn/go-examples/example1/s-gw/gwevent"
 	"github.com/auvn/go-examples/example1/s-gw/stream"
 	"github.com/auvn/go-examples/example1/s-gw/web"
@@ -19,7 +19,12 @@ func main() {
 			MessageType:   "Reserve",
 			Method:        "POST",
 		},
-
+		web.EndpointConfig{
+			Path:          "/trips/complete",
+			TargetService: "strips",
+			MessageType:   "Complete",
+			Method:        "POST",
+		},
 		web.EndpointConfig{
 			Path:          "/history/get",
 			TargetService: "shistory",
@@ -44,7 +49,7 @@ func main() {
 		},
 	)
 
-	natsssServer := natsss.NewServer(natsss.ServerConfig{ClusterName: "test-cluster", Name: "sgw"})
+	natsssServer := natsss.NewServer(natsss.ServerConfig{Name: "sgw"})
 	natsssServer.Subscribe(gwevent.TypeUserEvent, streams.SendUserEvent)
 
 	servegroup.Serve(context.Background(),

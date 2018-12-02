@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/auvn/go-examples/example1/s-framework/builtin/id"
-	"github.com/auvn/go-examples/example1/s-framework/encoding"
-	"github.com/auvn/go-examples/example1/s-framework/httputil"
+	"github.com/auvn/go-examples/example1/frwk-core/builtin/id"
+	"github.com/auvn/go-examples/example1/frwk-core/encoding"
+	"github.com/auvn/go-examples/example1/frwk-core/httputil"
 )
 
 type StreamConfig struct {

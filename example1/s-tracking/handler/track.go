@@ -4,14 +4,14 @@ import (
 	"context"
 	"io"
 
-	"github.com/auvn/go-examples/example1/s-framework/builtin/id"
-	"github.com/auvn/go-examples/example1/s-framework/encoding"
-	"github.com/auvn/go-examples/example1/s-gw/gwevent"
-	"github.com/auvn/go-examples/example1/s-tracking/driversevent"
+	"github.com/auvn/go-examples/example1/frwk-core/builtin/id"
+	"github.com/auvn/go-examples/example1/frwk-core/encoding"
+	"github.com/auvn/go-examples/example1/s-tracking/driver"
 )
 
 type TrackRequest struct {
 	DriverID id.ID
+	Busy     bool
 }
 
 func (h *Handlers) Track(ctx context.Context, body io.Reader, _ io.Writer) error {
@@ -20,17 +20,13 @@ func (h *Handlers) Track(ctx context.Context, body io.Reader, _ io.Writer) error
 		return err
 	}
 
-	if err := h.Drivers.Update(ctx, req.DriverID); err != nil {
+	updatedDriver := driver.Driver{
+		ID:   req.DriverID,
+		Busy: req.Busy,
+	}
+	if err := h.Drivers.Update(ctx, updatedDriver); err != nil {
 		return err
 	}
 
-	if err := h.Events.PublishEvent(ctx, gwevent.TypeUserEvent, gwevent.UserEvent{
-		UserID: req.DriverID,
-		Type:   driversevent.TypeHeartbeat,
-		Body:   driversevent.Heartbeat{},
-	}); err != nil {
-		return err
-	}
-
-	return nil
+	return h.DriverHeartbeats.Heartbeat(ctx, req.DriverID)
 }

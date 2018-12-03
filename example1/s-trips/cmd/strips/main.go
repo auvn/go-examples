@@ -19,7 +19,7 @@ func main() {
 			Hosts: []string{"localhost:27017"},
 			Name:  "strips",
 		})
-	natsssServer := natsss.NewServer(natsss.ServerConfig{
+	natsssServer := natsss.NewStreams(natsss.StreamConfig{
 		Name: "strips",
 	})
 

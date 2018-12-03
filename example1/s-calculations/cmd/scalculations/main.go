@@ -8,6 +8,6 @@ import (
 )
 
 func main() {
-	server := natsss.NewServer(natsss.ServerConfig{ClusterName: "test-cluster", Name: "scalculations"})
+	server := natsss.NewStreams(natsss.StreamConfig{ClusterName: "test-cluster", Name: "scalculations"})
 	servegroup.Serve(context.Background(), server)
 }

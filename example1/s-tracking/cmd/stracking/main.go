@@ -27,8 +27,8 @@ func main() {
 			Name: "stracking",
 		}))
 
-	natsssServer := natsss.NewServer(
-		natsss.ServerConfig{ClusterName: "test-cluster", Name: "stracking"})
+	natsssServer := natsss.NewStreams(
+		natsss.StreamConfig{ClusterName: "test-cluster", Name: "stracking"})
 
 	handlers := handler.Handlers{
 		Events:           events,

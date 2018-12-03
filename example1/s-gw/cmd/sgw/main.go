@@ -30,6 +30,7 @@ func main() {
 			TargetService: "shistory",
 			MessageType:   "Get",
 			Method:        "GET",
+			Port:          1203,
 		},
 
 		web.EndpointConfig{
@@ -49,7 +50,7 @@ func main() {
 		},
 	)
 
-	natsssServer := natsss.NewServer(natsss.ServerConfig{Name: "sgw"})
+	natsssServer := natsss.NewStreams(natsss.StreamConfig{Name: "sgw"})
 	natsssServer.Subscribe(gwevent.TypeUserEvent, streams.SendUserEvent)
 
 	servegroup.Serve(context.Background(),

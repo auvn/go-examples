@@ -10,29 +10,30 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ServerConfig struct {
+type StreamConfig struct {
 	ClusterName string
 	Name        string
 	URL         string
 }
 
-type Server struct {
-	cfg           ServerConfig
+type Streams struct {
+	cfg           StreamConfig
 	subscriptions event.Dispatcher
 	conn          stan.Conn
 }
 
-func (s *Server) Subscribe(eventType string, handler event.HandlerFunc) *Server {
+func (s *Streams) Subscribe(eventType string, handler event.HandlerFunc) *Streams {
 	s.subscriptions.Handle(eventType, handler)
 	return s
 }
 
-func (s *Server) Serve(ctx context.Context) error {
+func (s *Streams) Serve(ctx context.Context) error {
 	for eventType, dispatcher := range s.subscriptions {
-		subscr := subscription{
+		subscr := eventsSubscription{
 			eventType:  eventType,
 			dispatcher: dispatcher,
-			ctx:        ctx,
+			// TODO pass something via payload and build context here
+			ctx: ctx,
 		}
 
 		_, err := s.conn.QueueSubscribe(
@@ -56,22 +57,22 @@ func (s *Server) Serve(ctx context.Context) error {
 	return <-errCh
 }
 
-func NewServer(cfg ServerConfig) *Server {
+func NewStreams(cfg StreamConfig) *Streams {
 	cfg.ClusterName = "test-cluster"
-	return &Server{
+	return &Streams{
 		cfg:           cfg,
 		conn:          connect(cfg.ClusterName, cfg.Name, "server"),
 		subscriptions: event.Dispatcher{},
 	}
 }
 
-type subscription struct {
+type eventsSubscription struct {
 	eventType  string
 	dispatcher event.HandlerFunc
 	ctx        context.Context
 }
 
-func (s *subscription) HandleMessage(msg *stan.Msg) {
+func (s *eventsSubscription) HandleMessage(msg *stan.Msg) {
 	if err := s.dispatcher(s.ctx, bytes.NewBuffer(msg.Data)); err != nil {
 		log.Printf("natsss: failed to handle message %q: %v", s.eventType, err)
 		return

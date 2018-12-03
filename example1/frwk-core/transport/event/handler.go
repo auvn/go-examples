@@ -8,6 +8,10 @@ import (
 	"github.com/auvn/go-examples/example1/frwk-core/transport"
 )
 
+type Type interface {
+	String() string
+}
+
 type Publisher interface {
 	Publish(ctx context.Context, e transport.Event) error
 }

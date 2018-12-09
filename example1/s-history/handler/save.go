@@ -7,8 +7,8 @@ import (
 
 	"github.com/auvn/go-examples/example1/frwk-core/builtin/id"
 	"github.com/auvn/go-examples/example1/frwk-core/encoding"
-	"github.com/auvn/go-examples/example1/s-history/event"
 	"github.com/auvn/go-examples/example1/s-history/history"
+	"github.com/auvn/go-examples/example1/s-history/historyevent"
 )
 
 func (h *Handlers) Save(ctx context.Context, r io.Reader) error {
@@ -26,20 +26,23 @@ func (h *Handlers) Save(ctx context.Context, r io.Reader) error {
 	}
 
 	historyRecord := history.Record{
-		ID:       trip.TripID,
-		TripID:   trip.TripID,
-		RiderID:  trip.RiderID,
-		DriverID: trip.DriverID,
-		Distance: trip.Distance,
-		Duration: trip.Duration,
+		ID:        trip.TripID,
+		TripID:    trip.TripID,
+		RiderID:   trip.RiderID,
+		DriverID:  trip.DriverID,
+		Distance:  trip.Distance,
+		Duration:  trip.Duration,
+		CreatedAt: time.Now().UTC(),
 	}
 	if err := h.History.Save(ctx, historyRecord); err != nil {
 		return err
 	}
 
 	return h.Events.PublishEvent(ctx,
-		event.TypeTripAdded,
-		event.TripAdded{
-			TripID: trip.TripID,
+		historyevent.TypeTripAdded,
+		historyevent.TripAdded{
+			TripID:   trip.TripID,
+			Distance: trip.Distance,
+			Duration: trip.Duration,
 		})
 }

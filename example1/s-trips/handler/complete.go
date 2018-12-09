@@ -24,6 +24,11 @@ func (h *Handlers) Complete(ctx context.Context, body io.Reader, _ io.Writer) er
 		return err
 	}
 
+	var duration time.Duration
+	if completedTrip.StartedAt != nil {
+		duration = time.Now().UTC().Sub(*completedTrip.StartedAt)
+	}
+
 	return h.Events.PublishEvent(ctx,
 		tripsevent.TypeCompleted,
 		tripsevent.Completed{
@@ -31,6 +36,6 @@ func (h *Handlers) Complete(ctx context.Context, body io.Reader, _ io.Writer) er
 			TripID:   completedTrip.ID,
 			RiderID:  completedTrip.RiderID,
 			Distance: 100,
-			Duration: time.Hour,
+			Duration: duration,
 		})
 }

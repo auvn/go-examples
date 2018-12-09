@@ -3,6 +3,7 @@ package trip
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/auvn/go-examples/example1/frwk-core/builtin/id"
 	"github.com/auvn/go-examples/example1/frwk-storage/nosql/monga"
@@ -15,10 +16,11 @@ var (
 )
 
 type Trip struct {
-	ID        id.ID  `bson:"_id,omitempty"`
-	DriverID  *id.ID `bson:"driver_id,omitempty"`
-	RiderID   id.ID  `bson:"rider_id"`
-	Completed bool   `bson:"completed"`
+	ID        id.ID      `bson:"_id,omitempty"`
+	DriverID  *id.ID     `bson:"driver_id,omitempty"`
+	RiderID   id.ID      `bson:"rider_id"`
+	Completed bool       `bson:"completed"`
+	StartedAt *time.Time `bson:"started_at,omitempty"`
 }
 
 type Driver struct {
@@ -63,7 +65,7 @@ func (tt *Trips) ByDriver(ctx context.Context, driverID id.ID) (*Trip, error) {
 
 func (tt Trips) AssignDriver(ctx context.Context, d Driver) error {
 	ch := mgo.Change{
-		Update: bson.M{"$set": bson.M{"driver_id": d.ID}},
+		Update: bson.M{"$set": bson.M{"driver_id": d.ID, "started_at": time.Now().UTC()}},
 	}
 	_, err := tt.trips.Find(bson.M{"_id": d.TripID, "driver_id": nil}).Apply(ch, nil)
 	return err

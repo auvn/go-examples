@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"io"
-	"log"
 
 	"github.com/auvn/go-examples/example1/frwk-core/builtin/id"
 	"github.com/auvn/go-examples/example1/frwk-core/encoding"
@@ -26,8 +25,6 @@ func (h *Handlers) Get(ctx context.Context, body io.Reader, resp io.Writer) erro
 	if err := encoding.UnmarshalReader(body, &req); err != nil {
 		return err
 	}
-
-	log.Printf("%+v\n", req)
 
 	record, err := h.History.LastByRider(ctx, req.RiderID)
 	if err != nil {

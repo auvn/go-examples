@@ -1,22 +1,68 @@
 version: "3"
 services:
-  postgres:
-    image: auvn/go-examples/example1/postgres
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: userpwd
-  zookeeper:
-    image: wurstmeister/zookeeper
-  kafka:
-    image: wurstmeister/kafka
-    environment:
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://:9092
-  wview:
-    image: auvn/go-examples/example1/cluster/services/wview
-    ports:
-      - "8080:8000"
+  natsss:
+    image: nats-streaming
+    command: -SDV -hbf 3 -hbt 1s -hbi 1s
+  monga:
+    image: percona/percona-server-mongodb
   sgw:
     image: auvn/go-examples/example1/cluster/services/sgw
+    environment:
+      - NATSSS_URL=gnats://natsss:4222
+      - SERVICE_NAME=sgw
+    ports:
+      - "8081:8081"
+      - "8080:8080"
+    depends_on:
+      - "natsss"
   strips:
     image: auvn/go-examples/example1/cluster/services/strips
+    environment:
+      - SERVICE_NAME=strips
+      - NATSSS_URL=gnats://natsss:4222
+      - MONGA_HOSTS=monga:27017
+      - HOTTABYCH_ADDR=:1200
+    depends_on:
+      - "natsss"
+      - "monga"
+  shistory:
+    image: auvn/go-examples/example1/cluster/services/shistory
+    environment:
+      - SERVICE_NAME=shistory
+      - NATSSS_URL=gnats://natsss:4222
+      - MONGA_HOSTS=monga:27017
+      - HOTTABYCH_ADDR=:1200
+    depends_on:
+      - "natsss"
+      - "monga"
+  scalculations:
+    image: auvn/go-examples/example1/cluster/services/scalculations
+    environment:
+      - SERVICE_NAME=scalculations
+      - NATSSS_URL=gnats://natsss:4222
+    depends_on:
+      - "natsss"
+  stracking:
+    image: auvn/go-examples/example1/cluster/services/stracking
+    environment:
+      - SERVICE_NAME=stracking
+      - NATSSS_URL=gnats://natsss:4222
+      - MONGA_HOSTS=monga:27017
+      - HOTTABYCH_ADDR=:1200
+    depends_on:
+      - "natsss"
+      - "monga"
+  sdwh:
+    image: auvn/go-examples/example1/cluster/services/sdwh
+    environment:
+      - SERVICE_NAME=sdwh
+      - NATSSS_URL=gnats://natsss:4222
+    depends_on:
+      - "natsss"
+#  susers:
+#    image: auvn/go-examples/example1/cluster/services/susers
+#    environment:
+#      - SERVICE_NAME=susers
+#      - NATSSS_URL=gnats://natsss:4222
+#      - MONGA_HOSTS=monga:27017
+

@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 
+	"github.com/auvn/go-examples/example1/frwk-core/service"
 	"github.com/auvn/go-examples/example1/frwk-core/transport"
 	"github.com/nats-io/go-nats-streaming"
 	"github.com/pkg/errors"
@@ -33,8 +34,16 @@ func (c *Client) Publish(ctx context.Context, event transport.Event) error {
 }
 
 func NewClient(cfg ClientConfig) *Client {
+	cfg.ClusterName = "test-cluster"
 	return &Client{
 		cfg:  cfg,
-		conn: connect("test-cluster", cfg.Name, "client"),
+		conn: connect(cfg.URL, cfg.ClusterName, cfg.Name, "client"),
+	}
+}
+
+func EnvClientConfig() ClientConfig {
+	return ClientConfig{
+		Name: service.EnvName(),
+		URL:  EnvURL(),
 	}
 }

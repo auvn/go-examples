@@ -3,9 +3,11 @@ package monga
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/auvn/go-examples/example1/frwk-core/service"
 	"gopkg.in/mgo.v2"
 )
 
@@ -42,4 +44,12 @@ func dial(cfg Config) *mgo.Session {
 
 	return s
 
+}
+
+func EnvConfig() Config {
+	hostsStr := os.Getenv("MONGA_HOSTS")
+	return Config{
+		Name:  service.EnvName(),
+		Hosts: strings.Split(hostsStr, ","),
+	}
 }

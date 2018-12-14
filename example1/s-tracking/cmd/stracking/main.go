@@ -15,20 +15,12 @@ import (
 )
 
 func main() {
-	mongaClient := monga.MustNew(
-		monga.Config{
-			Hosts: []string{"localhost:27017"},
-			Name:  "stracking",
-		})
+	mongaClient := monga.MustNew(monga.EnvConfig())
 	drivers := driver.NewDrivers(mongaClient)
 
-	events := eventutil.NewPublisher(
-		natsss.NewClient(natsss.ClientConfig{
-			Name: "stracking",
-		}))
+	events := eventutil.NewPublisher(natsss.NewClient(natsss.EnvClientConfig()))
 
-	natsssServer := natsss.NewStreams(
-		natsss.StreamConfig{ClusterName: "test-cluster", Name: "stracking"})
+	natsssServer := natsss.NewStreams(natsss.EnvStreamConfig())
 
 	handlers := handler.Handlers{
 		Events:           events,

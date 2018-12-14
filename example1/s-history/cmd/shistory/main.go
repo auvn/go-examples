@@ -15,16 +15,11 @@ import (
 )
 
 func main() {
-	natsssStreams := natsss.
-		NewStreams(natsss.StreamConfig{Name: "shistory"})
-
-	mongoClient := monga.MustNew(monga.Config{
-		Name:  "shistory",
-		Hosts: []string{"localhost:27017"},
-	})
+	natsssStreams := natsss.NewStreams(natsss.EnvStreamConfig())
+	mongoClient := monga.MustNew(monga.EnvConfig())
 	handlers := handler.Handlers{
 		History: history.New(mongoClient),
-		Events:  eventutil.NewPublisher(natsss.NewClient(natsss.ClientConfig{Name: "shistory"})),
+		Events:  eventutil.NewPublisher(natsss.NewClient(natsss.EnvClientConfig())),
 	}
 
 	httpServer := hottabych.

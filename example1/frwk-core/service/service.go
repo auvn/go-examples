@@ -45,3 +45,7 @@ func Serve(ctx context.Context, ss ...Server) {
 	s := Service{}
 	s.Serve(ctx, ss...)
 }
+
+func EnvName() string {
+	return os.Getenv("SERVICE_NAME")
+}

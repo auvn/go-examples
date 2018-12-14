@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"log"
+	"os"
 
+	"github.com/auvn/go-examples/example1/frwk-core/service"
 	"github.com/auvn/go-examples/example1/frwk-core/transport/event"
 	"github.com/nats-io/go-nats-streaming"
 	"github.com/pkg/errors"
@@ -61,9 +63,20 @@ func NewStreams(cfg StreamConfig) *Streams {
 	cfg.ClusterName = "test-cluster"
 	return &Streams{
 		cfg:           cfg,
-		conn:          connect(cfg.ClusterName, cfg.Name, "server"),
+		conn:          connect(cfg.URL, cfg.ClusterName, cfg.Name, "server"),
 		subscriptions: event.Dispatcher{},
 	}
+}
+
+func EnvURL() string {
+	return os.Getenv("NATSSS_URL")
+}
+func EnvStreamConfig() StreamConfig {
+	return StreamConfig{
+		Name: service.EnvName(),
+		URL:  EnvURL(),
+	}
+
 }
 
 type eventsSubscription struct {

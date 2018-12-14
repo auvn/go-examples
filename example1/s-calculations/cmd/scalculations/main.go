@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-	server := natsss.NewStreams(natsss.StreamConfig{Name: "scalculations"})
-	client := natsss.NewClient(natsss.ClientConfig{Name: "scalculations"})
+	server := natsss.NewStreams(natsss.EnvStreamConfig())
+	client := natsss.NewClient(natsss.EnvClientConfig())
 
 	handlers := handler.Handlers{
 		Events: eventutil.NewPublisher(client),

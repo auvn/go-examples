@@ -30,7 +30,6 @@ func main() {
 			TargetService: "shistory",
 			MessageType:   "Get",
 			Method:        "GET",
-			Port:          1203,
 		},
 
 		web.EndpointConfig{
@@ -38,19 +37,16 @@ func main() {
 			TargetService: "stracking",
 			MessageType:   "Track",
 			Method:        "POST",
-			Port:          1202,
 		},
-
 		web.EndpointConfig{
 			Path:          "/driver/auth",
 			TargetService: "susers",
 			MessageType:   "AuthenticateDriver",
 			Method:        "POST",
-			Port:          1201,
 		},
 	)
 
-	natsssServer := natsss.NewStreams(natsss.StreamConfig{Name: "sgw"})
+	natsssServer := natsss.NewStreams(natsss.EnvStreamConfig())
 	natsssServer.Subscribe(gwevent.TypeUserEvent, streams.SendUserEvent)
 
 	servegroup.Serve(context.Background(),

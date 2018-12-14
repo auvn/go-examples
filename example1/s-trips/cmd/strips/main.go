@@ -14,19 +14,11 @@ import (
 )
 
 func main() {
-	mongaClient := monga.MustNew(
-		monga.Config{
-			Hosts: []string{"localhost:27017"},
-			Name:  "strips",
-		})
-	natsssServer := natsss.NewStreams(natsss.StreamConfig{
-		Name: "strips",
-	})
+	mongaClient := monga.MustNew(monga.EnvConfig())
+	natsssServer := natsss.NewStreams(natsss.EnvStreamConfig())
 
 	events := eventutil.NewPublisher(
-		natsss.NewClient(natsss.ClientConfig{
-			Name: "strips",
-		}))
+		natsss.NewClient(natsss.EnvClientConfig()))
 
 	handlers := handler.Handlers{
 		Trips:  trip.NewTrips(mongaClient),

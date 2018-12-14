@@ -45,25 +45,26 @@ func (dd *Drivers) Update(ctx context.Context, d Driver) error {
 func (dd *Drivers) Lookup(ctx context.Context) (id.ID, error) {
 	now := time.Now().UTC()
 
-	findQ := dd.collection.Find(bson.M{
-		"busy":          false,
-		"lock_deadline": bson.M{"$lt": now},
-	})
-
 	var d driverRecord
-	if err := findQ.One(&d); err != nil {
+
+	ch := mgo.Change{
+		Update: bson.M{"$set": bson.M{"lock_deadline": now.Add(dd.lockTTL)}},
+	}
+
+	_, err := dd.collection.
+		Find(bson.M{
+			"busy":          false,
+			"lock_deadline": bson.M{"$lt": now}}).
+		Sort("updated_at").
+		Apply(ch, &d)
+
+	if err != nil {
 		switch err {
 		case mgo.ErrNotFound:
 			return "", ErrNotFound
 		default:
 			return "", err
 		}
-	}
-
-	_, err := dd.collection.UpsertId(d.ID,
-		bson.M{"$set": bson.M{"lock_deadline": now.Add(dd.lockTTL)}})
-	if err != nil {
-		return "", err
 	}
 
 	return d.ID, nil

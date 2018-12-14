@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	server := natsss.NewStreams(natsss.StreamConfig{Name: "sdwh"})
+	server := natsss.NewStreams(natsss.EnvStreamConfig())
 
 	handlers := handler.Handlers{}
 	server.
